@@ -9,7 +9,7 @@
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "io.vertx.core.Launcher",
-            "args": "run com.intern.auth.MainVerticle"
+            "args": "run com.intern.auth.StartVerticle"
         }
     ]
 }

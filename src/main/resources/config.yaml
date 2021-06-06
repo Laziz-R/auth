@@ -1,0 +1,18 @@
+port: 8090
+host: localhost
+auth:
+  github:
+    clientId: 619497416ea57bbd0d42
+    clientSecret: 0d7132fc541f20a3990cba5381ef2b47221bc480
+    site: https://github.com/login
+    tokenPath: /oauth/access_token
+    authorizationPath: /oauth/authorize
+    scope: user
+  keycloak:
+    realm: master
+    auth-server-url: http://localhost:8080/auth
+    ssl-required: external
+    resource: vertx
+    credentials:
+      secret: f59d3cfa-2906-475d-9735-062f56724189
+    confidential-port: 0
