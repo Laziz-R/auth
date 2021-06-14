@@ -4,10 +4,6 @@ auth:
   github:
     clientId: 619497416ea57bbd0d42
     clientSecret: 0d7132fc541f20a3990cba5381ef2b47221bc480
-    site: https://github.com/login
-    tokenPath: /oauth/access_token
-    authorizationPath: /oauth/authorize
-    userInfoPath: https://api.github.com/user
     
   keycloak:
     realm: master
