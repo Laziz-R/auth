@@ -5,61 +5,74 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.oauth2.OAuth2Auth;
 import io.vertx.ext.auth.oauth2.OAuth2FlowType;
 import io.vertx.ext.auth.oauth2.OAuth2Options;
+import io.vertx.ext.auth.oauth2.providers.KeycloakAuth;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.sstore.SessionStore;
 
 public class MainVerticle extends AbstractVerticle {
-    @Override
-    public void start() throws Exception {
-      JsonObject github = config().getJsonObject("auth").getJsonObject("github");
-      JsonObject keycloak = config().getJsonObject("auth").getJsonObject("keycloak");
-      OAuth2Auth oauth2 = OAuth2Auth.create(vertx,
-              new OAuth2Options()
-                  .setFlow(OAuth2FlowType.AUTH_CODE)
-                  .setClientID(github.getString("clientId"))
-                  .setClientSecret(github.getString("clientSecret"))
-                  .setSite(github.getString("site"))
-                  .setTokenPath(github.getString("tokenPath"))
-                  .setAuthorizationPath(github.getString("authorizationPath")));
+  @Override
+  public void start() throws Exception {
 
-        Router router = Router.router(vertx);
-        router.route().handler(SessionHandler.create(SessionStore.create(vertx)));
-        router.route("/github/*").handler(ctx->{
-          if(ctx.user()!=null && !ctx.user().expired()){
-            ctx.next();
-          }
-          String authorization_uri = oauth2.authorizeURL(new JsonObject()
-            .put("scope", github.getString("scope"))
-            .put("state", ctx.normalizedPath()));
-          ctx.redirect(authorization_uri);
-        });
+    JsonObject keyJson = config().getJsonObject("auth").getJsonObject("keycloak");
 
-        router.get("/callback").handler(ctx->{
-          String code = ctx.request().getParam("code");
-          String state = ctx.request().getParam("state");
-          
-          oauth2.authenticate(new JsonObject()
-          .put("code", code))
-          .onSuccess(user->{
-            System.err.println("code: " + code);
-            ctx.setUser(user);
-            ctx.redirect(state);
-          })
-          .onFailure(ar->{
-            ctx.response().end("Failed");
+    OAuth2Auth authGit = OAuth2Auth.create(vertx, gitOptions());
+    OAuth2Auth authKey = KeycloakAuth.create(vertx, OAuth2FlowType.AUTH_CODE, keyJson);
+
+    Router router = Router.router(vertx);
+    router.route().handler(SessionHandler.create(SessionStore.create(vertx)));
+
+    router.route("/github/*").handler(ctx -> {
+      if (ctx.user() == null) {
+        String authorization_uri = authGit.authorizeURL(new JsonObject().put("scope", "user"));
+        ctx.session().put("back", ctx.request().path());
+        ctx.redirect(authorization_uri);
+      } else {
+        if (ctx.user().expired()) {
+          authGit.refresh(ctx.user()).onSuccess(freshUser -> {
+            ctx.setUser(freshUser);
           });
-        });
+        }
+        ctx.next();
+      }
+    });
 
-        router.get("/github/hi")
-        .handler(ctx->{
-          oauth2.userInfo(ctx.user())
-          .onSuccess(user->{
-            ctx.response().end(user.toString());
-          });
-        });
 
-        vertx.createHttpServer().requestHandler(router)
-                .listen(config().getInteger("port"), config().getString("host"));
-    }
+    router.get("/callback").handler(ctx -> {
+      String code = ctx.request().getParam("code");
+      authGit.authenticate(new JsonObject().put("code", code)).onSuccess(user -> {
+        ctx.setUser(user);
+        ctx.redirect(ctx.session().get("back"));
+      }).onFailure(ar -> {
+        ctx.response().end("Failed");
+      });
+    });
+
+    router.get("/github/hi").handler(ctx -> {
+      authGit
+      .userInfo(ctx.user())
+      .onSuccess(user -> {
+        ctx.response().end("Hi, " + user.getString("name"));
+      })
+      .onFailure(ar->
+        ctx.response().end(ar.getMessage())
+      );
+    });
+
+    vertx.createHttpServer().requestHandler(router).listen(config().getInteger("port"),
+        config().getString("host"));
+  }
+
+  public OAuth2Options gitOptions(){    
+    JsonObject github = config().getJsonObject("auth").getJsonObject("github");
+    return  new OAuth2Options()
+      .setFlow(OAuth2FlowType.AUTH_CODE)
+      .setClientID(github.getString("clientId"))
+      .setClientSecret(github.getString("clientSecret"))
+      .setSite(github.getString("site"))
+      .setUserInfoPath(github.getString("userInfoPath"))
+      .setUserAgent("vertx")
+      .setTokenPath(github.getString("tokenPath"))
+      .setAuthorizationPath(github.getString("authorizationPath"));
+  }
 }
