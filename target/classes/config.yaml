@@ -7,9 +7,11 @@ auth:
     
   keycloak:
     realm: master
-    auth-server-url: http://localhost:8080/auth
+    auth-server-url: http://localhost:8080/auth  
+    verify-token-audience: true
+    policy-enforcer: {}
     ssl-required: external
     resource: vertx
     credentials:
-      secret: f59d3cfa-2906-475d-9735-062f56724189
+      secret: aea3bae2-5938-45eb-b529-16508d74e4ee
     confidential-port: 0
