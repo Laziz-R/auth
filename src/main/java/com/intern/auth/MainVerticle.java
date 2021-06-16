@@ -24,19 +24,19 @@ public class MainVerticle extends AbstractVerticle {
 
     authGit = GithubAuth.create(vertx, github.getString("clientId"), github.getString("clientSecret"));
     authKey = KeycloakAuth.create(vertx, OAuth2FlowType.AUTH_CODE, keyJson);
-    Router router = Router.router(vertx);
+    
     authGitHandler = OAuth2AuthHandler.create(vertx, authGit);
-    authKeyHandler = OAuth2AuthHandler.create(vertx, authKey, "http://localhost:8090/callback");
+    authKeyHandler = OAuth2AuthHandler.create(vertx, authKey, "http://localhost:8088/*");
 
+    Router router = Router.router(vertx);
     router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx)));
     authGitHandler.setupCallback(router.route("/callback")).withScope("user");
-    authKeyHandler.setupCallback(router.route("/callback")).withScope("profile");
 
     router.route("/git/*").handler(authGitHandler);
-    router.route("/key/*").handler(authKeyHandler);    
-
     router.get("/git/userinfo").handler(this::gitUserInfoHandler);
     router.get("/git/logout")  .handler(this::gitLogout);
+    
+    router.route("/key/*").handler(authKeyHandler);    
     router.get("/key/userinfo").handler(this::keyUserInfoHandler);
     router.get("/key/logout")  .handler(this::keyLogout);
 

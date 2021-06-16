@@ -1,4 +1,4 @@
-port: 8090
+port: 8088
 host: localhost
 auth:
   github:
@@ -13,5 +13,5 @@ auth:
     ssl-required: external
     resource: vertx
     credentials:
-      secret: aea3bae2-5938-45eb-b529-16508d74e4ee
+      secret: d2b5f235-79c5-4f8f-b1bd-d1f99ade2241
     confidential-port: 0

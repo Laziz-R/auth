@@ -12,16 +12,16 @@ public class StartVerticle extends AbstractVerticle{
     public void start() throws Exception {
         String path = System.getProperty("user.dir") + "/src/main/resources/config.yaml";
         ConfigStoreOptions yamlStore = new ConfigStoreOptions()
-        .setType("file")
-        .setFormat("yaml")
-        .setConfig(new JsonObject()
-          .put("path", path)
+          .setType("file")
+          .setFormat("yaml")
+          .setConfig(new JsonObject()
+            .put("path", path)
         );
         ConfigRetrieverOptions options = new ConfigRetrieverOptions().addStore(yamlStore);
         ConfigRetriever retriever = ConfigRetriever.create(vertx, options);
         retriever.getConfig()
         .onSuccess(conf->{
-          vertx.deployVerticle(new MainVerticle(), new DeploymentOptions().setConfig(conf));
+          vertx.deployVerticle(new KeyDemoVert(), new DeploymentOptions().setConfig(conf));
         });
     }
 }
