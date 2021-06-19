@@ -13,5 +13,5 @@ auth:
     ssl-required: external
     resource: vertx
     credentials:
-      secret: d2b5f235-79c5-4f8f-b1bd-d1f99ade2241
+      secret: aea3bae2-5938-45eb-b529-16508d74e4ee
     confidential-port: 0
