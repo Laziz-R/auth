@@ -1,0 +1,15 @@
+
+
+
+entity Library{
+	name String required
+}
+
+entity Book {
+	name String required
+    author String
+}
+
+relationship OneToMany {
+	Library to Book
+}
